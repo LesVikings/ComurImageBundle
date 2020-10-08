@@ -5,6 +5,7 @@ namespace Comur\ImageBundle\Form\Type;
 use Symfony\Component\Form\AbstractType;
 // use Symfony\Component\Form\FormBuilder;
 
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Form\FormInterface;
@@ -66,15 +67,15 @@ class CroppableImageType extends AbstractType
         // }
         // var_dump($builder->getDataMapper());exit;
         if ($options['uploadConfig']['saveOriginal']) {
-            $builder->add($options['uploadConfig']['saveOriginal'], TextType::class, array(
+            $builder->add($options['uploadConfig']['saveOriginal'], HiddenType::class, array(
                 // 'inherit_data' => true,
                 // 'property_path' => $options['uploadConfig']['saveOriginal'],
-                'attr' => array('style' => 'opacity: 0;width: 0; max-width: 0; height: 0; max-height: 0;')));
+            ));
         }
-        $builder->add($builder->getName(), TextType::class, array(
+        $builder->add($builder->getName(), HiddenType::class, array(
             // 'property_path' => $builder->getName(),
             // 'inherit_data' => true,
-            'attr' => array('style' => 'opacity: 0;width: 0; max-width: 0; height: 0; max-height: 0;')));
+        ));
     }
 
     /**
