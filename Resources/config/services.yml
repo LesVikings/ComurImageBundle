@@ -20,5 +20,10 @@ services:
 
     Comur\ImageBundle\Controller\:
         autowire: true
+        autoconfigure: true
         resource: '../../Controller'
         tags: ['controller.service_arguments']
+
+    Comur\ImageBundle\Form\Type\CroppableImageType: '@comur_image_bundle.image_type'
+    Comur\ImageBundle\Form\Type\CroppableGalleryType: '@comur_image_bundle.gallery_type'
+    Comur\ImageBundle\Twig\ThumbExtension: '@comur.twig.thumb_extension'

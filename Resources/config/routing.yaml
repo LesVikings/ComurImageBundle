@@ -1,0 +1,3 @@
+comur_image_bundle:
+  type: annotation
+  resource: '@ComurImageBundle/Controller/UploadController.php'

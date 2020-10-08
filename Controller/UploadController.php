@@ -8,11 +8,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\Translation\TranslatorInterface;
-
 use Symfony\Component\Finder\Finder;
-
 use Comur\ImageBundle\Handler\UploadHandler;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class UploadController extends AbstractController
 {
@@ -26,17 +25,18 @@ class UploadController extends AbstractController
     /**
      * Save uploaded image according to comur_image field configuration
      *
+     * @Route("/upload",name="comur_api_upload", options = { "expose" = true })
      * @param Request $request
      */
-    public function uploadImageAction(Request $request
+    public function uploadImage(Request $request
         /*, $uploadUrl, $paramName, $webDir, $minWidth=1, $minHeight=1*/
     ){
         $config = json_decode($request->request->get('config'),true);
 
-        $thumbsDir = $this->container->getParameter('comur_image.thumbs_dir');
-        $thumbSize = $this->container->getParameter('comur_image.media_lib_thumb_size');
+        $thumbsDir = $this->getParameter('comur_image.thumbs_dir');
+        $thumbSize = $this->getParameter('comur_image.media_lib_thumb_size');
         if (isset($config['uploadConfig']['uploadDir'])) {
-            $uploadUrl = $this->container->getParameter('comur_image.public_dir') . '/' . $config['uploadConfig']['uploadDir'];
+            $uploadUrl = $this->getParameter('comur_image.public_dir') . '/' . $config['uploadConfig']['uploadDir'];
         } else {
             // For backward compatibility
             /**
@@ -62,8 +62,8 @@ class UploadController extends AbstractController
             }
         }
 
-        $galleryDir = $this->container->getParameter('comur_image.gallery_dir');
-        $gThumbSize = $this->container->getParameter('comur_image.gallery_thumb_size');
+        $galleryDir = $this->getParameter('comur_image.gallery_dir');
+        $gThumbSize = $this->getParameter('comur_image.gallery_thumb_size');
 
         $ext = $request->files->get('image_upload_file')->getClientOriginalExtension();//('image_upload_file');
         $completeName = $filename.'.'.$ext;
@@ -88,7 +88,7 @@ class UploadController extends AbstractController
             )
         );
 
-        $transDomain = $this->container->getParameter('comur_image.translation_domain');
+        $transDomain = $this->getParameter('comur_image.translation_domain');
 
         $errorMessages = array(
             1 => $this->translator->trans('The uploaded file exceeds the upload_max_filesize directive in php.ini', array(), $transDomain),
@@ -121,9 +121,10 @@ class UploadController extends AbstractController
     /**
      * Crop image using jCrop and upload config parameters and create thumbs if needed
      *
+     * @Route("/crop",name="comur_api_crop", options = { "expose" = true })
      * @param Request $request
      */
-    public function cropImageAction(Request $request
+    public function cropImage(Request $request
         /*, $uploadUrl, $webDir, $imageName, $x, $y, $w, $h, $tarW, $tarH*/
     ){
         $config = json_decode($request->request->get('config'),true);
@@ -154,7 +155,7 @@ class UploadController extends AbstractController
         // $disableCrop = $config['cropConfig']['disableCrop'];
 
         if (isset($config['uploadConfig']['uploadDir'])) {
-            $uploadUrl = $this->container->getParameter('comur_image.public_dir') . '/' . urldecode($config['uploadConfig']['uploadDir']);
+            $uploadUrl = $this->getParameter('comur_image.public_dir') . '/' . urldecode($config['uploadConfig']['uploadDir']);
         } else {
             // For backward compatibility
             /**
@@ -176,15 +177,17 @@ class UploadController extends AbstractController
         //     }
         // }
 
-        if (!is_dir($uploadUrl.'/'.$this->container->getParameter('comur_image.cropped_image_dir').'/')) {
-            mkdir($uploadUrl.'/'.$this->container->getParameter('comur_image.cropped_image_dir').'/', 0755, true);
+        if (!is_dir($uploadUrl.'/'.$this->getParameter('comur_image.cropped_image_dir').'/')) {
+            if ( !mkdir( $concurrentDirectory = $uploadUrl . '/' . $this->getParameter( 'comur_image.cropped_image_dir' ) . '/', 0755, true ) && !is_dir( $concurrentDirectory ) ) {
+                throw new \RuntimeException( sprintf( 'Directory "%s" was not created', $concurrentDirectory ) );
+            }
         }
         $ext = pathinfo($imageName, PATHINFO_EXTENSION);
         //set uniq filename if defined inside the configuration
         if($config['uploadConfig']['generateFilename']){
             $imageName = sha1(uniqid(mt_rand(), true)).'.'.$ext;
         }
-        $destSrc = $uploadUrl.'/'.$this->container->getParameter('comur_image.cropped_image_dir').'/'.$imageName;
+        $destSrc = $uploadUrl.'/'.$this->getParameter('comur_image.cropped_image_dir').'/'.$imageName;
         //$writeFunc($dstR,$src,$imageQuality);
 
         $destW = $w;
@@ -199,7 +202,7 @@ class UploadController extends AbstractController
                 // var_dump($destW, $destH, $w, $h, $this->getMaxResizeValues($w, $h, $tarW, $tarH));exit;
                 // $destW = $w;
                 // $destH = $h;
-                list($destW, $destH) = $this->getMinResizeValues($w, $h, $tarW, $tarH);
+                [$destW, $destH] = $this->getMinResizeValues($w, $h, $tarW, $tarH);
             }
 
         }
@@ -208,8 +211,8 @@ class UploadController extends AbstractController
 
         $galleryThumbOk = false;
         $isGallery = isset($config['uploadConfig']['isGallery']) ? $config['uploadConfig']['isGallery'] : false;
-        $galleryDir = $this->container->getParameter('comur_image.gallery_dir');
-        $gThumbSize = $this->container->getParameter('comur_image.gallery_thumb_size');
+        $galleryDir = $this->getParameter('comur_image.gallery_dir');
+        $gThumbSize = $this->getParameter('comur_image.gallery_thumb_size');
 
         if($isGallery)
         {
@@ -222,13 +225,15 @@ class UploadController extends AbstractController
 
 
         //Create thumbs if asked
-        $previewSrc = '/'.$config['uploadConfig']['webDir'] . '/' . $this->container->getParameter('comur_image.cropped_image_dir') . '/'. $imageName;
+        $previewSrc = '/'.$config['uploadConfig']['webDir'] . '/' . $this->getParameter('comur_image.cropped_image_dir') . '/'. $imageName;
         if(isset($config['cropConfig']['thumbs']) && ($thumbs = $config['cropConfig']['thumbs']) && count($thumbs))
         {
-            $thumbDir = $uploadUrl.'/'.$this->container->getParameter('comur_image.cropped_image_dir') . '/' . $this->container->getParameter('comur_image.thumbs_dir').'/';
+            $thumbDir = $uploadUrl.'/'.$this->getParameter('comur_image.cropped_image_dir') . '/' . $this->getParameter('comur_image.thumbs_dir').'/';
             if(!is_dir($thumbDir))
             {
-                mkdir($thumbDir);
+                if ( !mkdir( $thumbDir ) && !is_dir( $thumbDir ) ) {
+                    throw new \RuntimeException( sprintf( 'Directory "%s" was not created', $thumbDir ) );
+                }
             }
 
 
@@ -242,21 +247,21 @@ class UploadController extends AbstractController
                 }
                 if(isset($thumb['forGallery']) && $galleryThumbOk) continue;
 
-                list($w, $h) = $this->getMaxResizeValues($destW, $destH, $maxW, $maxH);
+                [$w, $h] = $this->getMaxResizeValues($destW, $destH, $maxW, $maxH);
 
                 $thumbName = $maxW.'x'.$maxH.'-'.$imageName;
                 $thumbSrc = $thumbDir . $thumbName;
                 $this->resizeCropImage($thumbSrc, $destSrc, 0, 0, 0, 0, $w, $h, $destW, $destH);
                 if(isset($thumb['useAsFieldImage']) && $thumb['useAsFieldImage']){
-                    $previewSrc = '/'.$config['uploadConfig']['webDir'] . '/' . $this->container->getParameter('comur_image.cropped_image_dir') . '/'. $this->container->getParameter('comur_image.thumbs_dir'). '/' . $thumbName;
+                    $previewSrc = '/'.$config['uploadConfig']['webDir'] . '/' . $this->getParameter('comur_image.cropped_image_dir') . '/'. $this->getParameter('comur_image.thumbs_dir'). '/' . $thumbName;
                 }
             }
         }
 
         return new Response(json_encode(array('success' => true,
-                                              'filename'=>$this->container->getParameter('comur_image.cropped_image_dir').'/'.$imageName,
+                                              'filename'=>$this->getParameter('comur_image.cropped_image_dir').'/'.$imageName,
                                               'previewSrc' => $previewSrc,
-                                              'galleryThumb' => $this->container->getParameter('comur_image.cropped_image_dir') . '/' . $this->container->getParameter('comur_image.thumbs_dir').'/'.$gThumbSize.'x'.$gThumbSize.'-' .$imageName)));
+                                              'galleryThumb' => $this->getParameter('comur_image.cropped_image_dir') . '/' . $this->getParameter('comur_image.thumbs_dir').'/'.$gThumbSize.'x'.$gThumbSize.'-' .$imageName)));
     }
 
     /**
@@ -311,9 +316,10 @@ class UploadController extends AbstractController
     /**
      * Returns files from required directory
      *
+     * @Route("/image-library",name="comur_api_image_library", options = { "expose" = true })
      * @param Request $request
      */
-    public function getLibraryImagesAction(Request $request){
+    public function getLibraryImages(Request $request){
         $finder = new Finder();
 
         $finder->sortByType();
@@ -321,12 +327,14 @@ class UploadController extends AbstractController
         $result = array();
         $files = array();
 
-        $result['thumbsDir'] = $this->container->getParameter('comur_image.thumbs_dir');
+        $result['thumbsDir'] = $this->getParameter('comur_image.thumbs_dir');
 
-        $libDir = $this->container->getParameter('comur_image.public_dir') . '/' .  $request->request->get('dir');
+        $libDir = $this->getParameter('comur_image.public_dir') . '/' .  $request->request->get('dir');
 
         if (!is_dir($libDir)) {
-            mkdir($libDir.'/', 0755, true);
+            if ( !mkdir( $concurrentDirectory = $libDir . '/', 0755, true ) && !is_dir( $concurrentDirectory ) ) {
+                throw new \RuntimeException( sprintf( 'Directory "%s" was not created', $concurrentDirectory ) );
+            }
         }
 
         foreach ($finder->in($libDir)->files() as $file) {
@@ -436,9 +444,9 @@ class UploadController extends AbstractController
      * @param Request $request
      * @return Response
      */
-    public function getTranslationCatalogue(Request $request) {
-        $transDomain = $this->container->getParameter('comur_image.translation_domain');
-        $catalogue = $this->translator->getCatalogue($request->getLocale());
+    public function getTranslationCatalogue(Request $request, TranslatorInterface $translator) {
+        $transDomain = $this->getParameter('comur_image.translation_domain');
+        $catalogue = $translator->getCatalogue($request->getLocale());
         $messages = $catalogue->all();
 
         return $this->render('@ComurImage/translations.html.twig', array(

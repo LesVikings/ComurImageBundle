@@ -110,8 +110,7 @@ in the `config/bundles.php` file of your project:
 return [
             // ...
             Comur\ImageBundle\ComurImageBundle::class => ['all' => true],
-            FOS\JsRoutingBundle\FOSJsRoutingBundle::class => ['all' => true],
-            JMS\TranslationBundle\JMSTranslationBundle::class => ['all' => true],
+            FOS\JsRoutingBundle\FOSJsRoutingBundle::class => ['all' => true]
         ];
 ```
 
@@ -165,7 +164,6 @@ class AppKernel extends Kernel
             // ...
             new Comur\ImageBundle\ComurImageBundle(),
             new FOS\JsRoutingBundle\FOSJsRoutingBundle(),
-            new JMS\TranslationBundle\JMSTranslationBundle(),
         ];
 
         // ...
