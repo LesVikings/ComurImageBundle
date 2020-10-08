@@ -143,6 +143,7 @@ class CroppableImageType extends AbstractType
         $resolver->setDefaults(array(
             'uploadConfig' => $uploadConfig,
             'cropConfig' => $cropConfig,
+            'holderConfig' => null,
             // 'compound' => function(Options $options, $value) use($cropConfig){
             //     return $options['uploadConfig']['saveOriginal'] ? true : false;
             // },
@@ -180,6 +181,7 @@ class CroppableImageType extends AbstractType
 
         $uploadConfig = $options['uploadConfig'];
         $cropConfig = $options['cropConfig'];
+        $holderConfig = $options['holderConfig'];
 
         $fieldImage = null;
         if (isset($cropConfig['thumbs']) && count($thumbs = $cropConfig['thumbs']) > 0) {
@@ -190,7 +192,7 @@ class CroppableImageType extends AbstractType
             }
         }
 
-        $view->vars['options'] = array('uploadConfig' => $uploadConfig, 'cropConfig' => $cropConfig, 'fieldImage' => $fieldImage);
+        $view->vars['options'] = array('uploadConfig' => $uploadConfig, 'cropConfig' => $cropConfig, 'fieldImage' => $fieldImage, 'holderConfig' => $holderConfig);
         $view->vars['attr'] = array_merge(
             isset($options['attr']) ? $options['attr'] : array(),
             array(
