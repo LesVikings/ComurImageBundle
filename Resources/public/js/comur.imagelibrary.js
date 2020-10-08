@@ -36,7 +36,7 @@ function initializeImageManager(id, options, cb){
                 // console.log(files);
                 for (var i = files.length - 1; i >= 0; i--) {
                     var now = new Date().getTime();
-                    $('#existing-images').append('<div class="image-container" data-src="'+files[i]+'"><img src="/'+options.uploadConfig.webDir + '/'+response['thumbsDir']+'/'+files[i]+'?'+now+'"/></div>');
+                    $('#existing-images').append('<div class="image-container" data-src="'+files[i]+'"><img class="img-fluid img-thumbnail" src="/'+options.uploadConfig.webDir + '/'+response['thumbsDir']+'/'+files[i]+'?'+now+'"/></div>');
                 };
 
                 $('.image-container').click(function(){
@@ -98,8 +98,9 @@ function initializeImageManager(id, options, cb){
                 // $('#image_preview').html('<img src="/'+data.result['image_upload_file'][0].url+'" id="image_preview_image"/>');
                 $('#selected_image').val(data.result['image_upload_file'][0].name);
                 if (options.cropConfig.disable) {
-                    $('#'+id).val(data.result['image_upload_file'][0].name);
-                    $('#image_preview_image_'+id).html('<img class="img-fluid" src="'+options.uploadConfig.webDir + '/' + data.result['image_upload_file'][0].name +'?'+ new Date().getTime()+'" id="'+id+'_preview"/>');
+                    var $widget = $('#'+id);
+                    $widget.val(data.result['image_upload_file'][0].name);
+                    $('#image_preview_image_'+id).html('<img class="img-fluid img-thumbnail" src="'+options.uploadConfig.webDir + '/' + data.result['image_upload_file'][0].name +'?'+ new Date().getTime()+'" id="'+id+'_preview"/>');
                     reinitModal();
                     cb({
                         previewSrc: '/' + options.uploadConfig.webDir + '/' + data.result['image_upload_file'][0].name +'?'+ new Date().getTime(),
@@ -166,7 +167,7 @@ function initJCrop(id, options){
     // if(!options.cropConfig.disableCrop){
         var now = new Date().getTime();
         $('#image_preview img').remove();
-        $('#image_preview').html('<img class="img-fluid" src="/'+options.uploadConfig.webDir + '/'+$('#selected_image').val()+'?'+now+'" id="image_preview_image"/>');
+        $('#image_preview').html('<img class="img-fluid img-thumbnail" src="/'+options.uploadConfig.webDir + '/'+$('#selected_image').val()+'?'+now+'" id="image_preview_image"/>');
         $($('#image_preview img')[0]).on('load', function(){
 
 
@@ -243,8 +244,9 @@ function cropImage(id, options){
                 }
                 else{
                     // console.log('simple image');
-                    $('#'+id).val(filename);
-                    $('#image_preview_image_'+id).html('<img class="img-fluid" src="'+previewSrc+'?'+ new Date().getTime()+'" id="'+id+'_preview"/>');
+                    var $widget = $('#'+id);
+                    $widget.val(filename);
+                    $('#image_preview_image_'+id).html('<img class="img-fluid img-thumbnail" src="'+previewSrc+'?'+ new Date().getTime()+'" id="'+id+'_preview"/>');
                     // console.log(options.uploadConfig.saveOriginal, $('#'+options.originalImageFieldId), options.originalImageFieldId);
                     if(options.uploadConfig.saveOriginal){
                         // console.log('set '+$('#selected_image').val());
@@ -252,7 +254,7 @@ function cropImage(id, options){
                         $('#image_preview_image_'+id+' img').css('cursor: hand; cursor: pointer;');
                         $('#image_preview_image_'+id+' img').click(function(e){
                             if($( event.target ).is( "img" )){
-                                $('<div class="modal hide fade"><img src="'+options.uploadConfig.webDir+'/'+$('#selected_image').val()+'"/></div>').modal();
+                                $('<div class="modal hide fade"><img class="img-fluid img-thumbnail" src="'+options.uploadConfig.webDir+'/'+$('#selected_image').val()+'"/></div>').modal();
                                 return false;
                             }
                         });
@@ -291,7 +293,7 @@ function addImageToGallery(filename, id, thumb, options)
         '<span class="remove-image"><i class="fa fa-remove"></i></span>' +
         '<span class="gallery-image-helper"></span>' +
         '<input type="text" id="'+id+'_'+nb+'" name="'+name+'['+nb+']" style="padding:0; border: 0; margin: 0; opacity: 0;width: 0; max-width: 0; height: 0; max-height: 0;" value="'+filename+'">' +
-        '<img src="/'+options.uploadConfig.webDir + '/' + thumb+'?'+ new Date().getTime()+'"/>' +
+        '<img class="img-fluid img-thumbnail" src="/'+options.uploadConfig.webDir + '/' + thumb+'?'+ new Date().getTime()+'"/>' +
     '</div>');
     rebindGalleryRemove();
 }
