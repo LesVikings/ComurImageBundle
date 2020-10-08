@@ -16,11 +16,11 @@
       </trans-unit>
       <trans-unit id="cfdff1de9222ae8e71d10f589f1d6a5b42347477" resname="Crop &amp; Use !">
         <source><![CDATA[Crop & Use !]]></source>
-        <target><![CDATA[Cropper & Utiliser !]]></target>
+        <target><![CDATA[Rogner & utiliser !]]></target>
       </trans-unit>
       <trans-unit id="5580c63bc4b0fc39c3db8d3d53b8c6c159a991d1" resname="Crop and Use">
         <source>Crop and Use</source>
-        <target>Cropper et Utiliser</target>
+        <target>Rogner et utiliser</target>
       </trans-unit>
       <trans-unit id="65f4b6c70faee1f98e2e20e783c985716f5d3ad9" resname="Drop your file here">
         <source>Drop your file here</source>
@@ -72,7 +72,7 @@
       </trans-unit>
       <trans-unit id="a2d43587989e2b5142295194edd0c74e3cf29cc8" resname="Insert Image">
         <source>Insert Image</source>
-        <target>Uploader image</target>
+        <target>Insérer une image</target>
       </trans-unit>
       <trans-unit id="271b0fba656eb1287e7e4b976ae28b4fa8385631" resname="Maximum number of files exceeded">
         <source>Maximum number of files exceeded</source>
@@ -92,7 +92,7 @@
       </trans-unit>
       <trans-unit id="07abfd9112b9bd5535213abeb01386152ef4c1d4" resname="Please select or upload an image">
         <source>Please select or upload an image</source>
-        <target>Veuillez uploader ou sélectionner une image existante</target>
+        <target>Veuillez télécharger ou sélectionner une image existante</target>
       </trans-unit>
       <trans-unit id="6ed2aa6178d845f3246027181bf6cf89322961f0" resname="Select Existing">
         <source>Select Existing</source>
@@ -120,7 +120,7 @@
       </trans-unit>
       <trans-unit id="159031eaeed919231a31e757a438b81530589af3" resname="Upload Image">
         <source>Upload Image</source>
-        <target>Uploader image</target>
+        <target>Télécharger une image</target>
       </trans-unit>
       <trans-unit id="1758356db21759f7c5a0da9b4dd1db8fd6feab3f" resname="or">
         <source>or</source>

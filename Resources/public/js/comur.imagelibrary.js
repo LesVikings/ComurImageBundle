@@ -102,10 +102,12 @@ function initializeImageManager(id, options, cb){
                     $widget.val(data.result['image_upload_file'][0].name);
                     $('#image_preview_image_'+id).html('<img class="img-fluid img-thumbnail" src="'+options.uploadConfig.webDir + '/' + data.result['image_upload_file'][0].name +'?'+ new Date().getTime()+'" id="'+id+'_preview"/>');
                     reinitModal();
-                    cb({
+                    var resultData = {
                         previewSrc: '/' + options.uploadConfig.webDir + '/' + data.result['image_upload_file'][0].name +'?'+ new Date().getTime(),
                         filename: data.result['image_upload_file'][0].name
-                    });
+                    };
+                    cb(resultData);
+                    $widget.trigger('comur_image.uploaded', resultData);
                 } else {
                     initJCrop(id, options);
                 }
@@ -261,6 +263,7 @@ function cropImage(id, options){
                     }
                     //$('#image_preview_image_'+id).html('<img src="/'+options.uploadConfig.webDir + '/' + $('#selected_image').val()+'?'+ new Date().getTime()+'" id="'+id+'_preview"/>');
                     $('#image_preview_'+id).removeClass('hide-disabled');
+                    $widget.trigger('comur_image.selected');
                 }
             }
 
