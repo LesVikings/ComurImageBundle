@@ -2,8 +2,10 @@
 
 namespace Comur\ImageBundle\Controller;
 
+use Comur\ImageBundle\Naming\ConfigurableInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -28,7 +30,7 @@ class UploadController extends AbstractController
      * @Route("/upload",name="comur_api_upload", options = { "expose" = true })
      * @param Request $request
      */
-    public function uploadImage(Request $request
+    public function uploadImage(Request $request, ContainerInterface $container
         /*, $uploadUrl, $paramName, $webDir, $minWidth=1, $minHeight=1*/
     ){
         $config = json_decode($request->request->get('config'),true);
@@ -51,8 +53,21 @@ class UploadController extends AbstractController
 
 //        $webDir = $config['uploadConfig']['webDir'];
 //        $webDir = substr($webDir, -strlen('/')) === '/' ? $webDir : $webDir . '/';
+        $filename = '';
         if($config['uploadConfig']['generateFilename']) {
-            $filename = sha1(uniqid(mt_rand(), true));
+            /** @var \Comur\ImageBundle\Naming\NamerInterface $namer */
+            $namer        = $container->get( $this->getParameter( 'comur_image.namer.service' ) );
+            $namerOptions = $this->getParameter( 'comur_image.namer.options' );
+
+            if ( $namer instanceof ConfigurableInterface && $namerOptions ) {
+                $namer->configure( $namerOptions );
+            }
+
+            if ( $namer ) {
+                $filename = $namer->name( pathinfo( $request->files->get( 'image_upload_file' )->getClientOriginalName(), PATHINFO_FILENAME ) );
+            } else {
+                $filename = sha1( uniqid( mt_rand(), true ) );
+            }
         }
         else {
             $filename = $request->files->get('image_upload_file')->getClientOriginalName();
@@ -111,8 +126,8 @@ class UploadController extends AbstractController
             'image_resize' => $this->translator->trans('Failed to resize image', array(), $transDomain),
         );
 
-        $response->setCallback(function () use($handlerConfig, $errorMessages) {
-            new UploadHandler($handlerConfig, true, $errorMessages);
+        $response->setCallback(function () use($handlerConfig, $errorMessages, $container) {
+            new UploadHandler($handlerConfig, true, $errorMessages, $container);
         });
 
         return $response->send();
@@ -124,7 +139,7 @@ class UploadController extends AbstractController
      * @Route("/crop",name="comur_api_crop", options = { "expose" = true })
      * @param Request $request
      */
-    public function cropImage(Request $request
+    public function cropImage(Request $request, ContainerInterface $container
         /*, $uploadUrl, $webDir, $imageName, $x, $y, $w, $h, $tarW, $tarH*/
     ){
         $config = json_decode($request->request->get('config'),true);
@@ -182,11 +197,26 @@ class UploadController extends AbstractController
                 throw new \RuntimeException( sprintf( 'Directory "%s" was not created', $concurrentDirectory ) );
             }
         }
-        $ext = pathinfo($imageName, PATHINFO_EXTENSION);
+        $ext = pathinfo( $imageName, PATHINFO_EXTENSION );
         //set uniq filename if defined inside the configuration
-        if($config['uploadConfig']['generateFilename']){
-            $imageName = sha1(uniqid(mt_rand(), true)).'.'.$ext;
+        if ( $config['uploadConfig']['generateFilename'] ) {
+            /** @var \Comur\ImageBundle\Naming\NamerInterface $namer */
+            $namer        = $container->get( $this->getParameter( 'comur_image.namer.service' ) );
+            $namerOptions = $this->getParameter( 'comur_image.namer.options' );
+
+            if ( $namer instanceof ConfigurableInterface && $namerOptions ) {
+                $namer->configure( $namerOptions );
+            }
+
+            if ( $namer ) {
+                $imageName = $namer->name( pathinfo( $imageName, PATHINFO_FILENAME ) );
+            } else {
+                $imageName = sha1( uniqid( mt_rand(), true ) );
+            }
+
+            $imageName .= '.' . $ext;
         }
+
         $destSrc = $uploadUrl.'/'.$this->getParameter('comur_image.cropped_image_dir').'/'.$imageName;
         //$writeFunc($dstR,$src,$imageQuality);
 

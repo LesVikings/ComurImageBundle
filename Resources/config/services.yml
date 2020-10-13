@@ -24,6 +24,11 @@ services:
         resource: '../../Controller'
         tags: ['controller.service_arguments']
 
+    Comur\ImageBundle\Naming\:
+        autowire: true
+        resource: '../../Naming'
+        public: true
+
     Comur\ImageBundle\Form\Type\CroppableImageType: '@comur_image_bundle.image_type'
     Comur\ImageBundle\Form\Type\CroppableGalleryType: '@comur_image_bundle.gallery_type'
     Comur\ImageBundle\Twig\ThumbExtension: '@comur.twig.thumb_extension'

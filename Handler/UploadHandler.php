@@ -11,6 +11,9 @@
  */
 namespace Comur\ImageBundle\Handler;
 
+use Comur\ImageBundle\Naming\ConfigurableInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 class UploadHandler
 {
 
@@ -40,8 +43,13 @@ class UploadHandler
     );
 
     protected $image_objects = array();
+    /**
+     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     */
+    private $container;
 
-    function __construct($options = null, $initialize = true, $error_messages = null) {
+    function __construct($options = null, $initialize = true, $error_messages = null, ContainerInterface $container = null) {
+        $this->container = $container;
         $this->options = array(
             'script_url' => $this->get_full_url().'/',
             'upload_dir' => dirname($this->get_server_var('SCRIPT_FILENAME')).'/files/',
@@ -393,7 +401,7 @@ class UploadHandler
         $min_width = @$this->options['min_width'];
         $min_height = @$this->options['min_height'];
         if (($max_width || $max_height || $min_width || $min_height)) {
-            list($img_width, $img_height) = $this->get_image_size($uploaded_file);
+            [$img_width, $img_height] = $this->get_image_size($uploaded_file);
         }
         if (!empty($img_width)) {
             if ($max_width && $img_width > $max_width) {
@@ -433,15 +441,36 @@ class UploadHandler
 
     protected function get_unique_filename($file_path, $name, $size, $type, $error,
             $index, $content_range) {
-        if($this->options['generated_file_name']){
-            $ext = pathinfo($name, PATHINFO_EXTENSION);
-            return sha1(uniqid(mt_rand(), true)).'.'.$ext;
+        if ( $this->options['generated_file_name'] ) {
+            $ext = pathinfo( $name, PATHINFO_EXTENSION );
+            $basename = pathinfo($name, PATHINFO_FILENAME);
+
+            if ( $this->container ) {
+                /** @var \Comur\ImageBundle\Naming\NamerInterface $namer */
+                $namer        = $this->container->get( $this->container->getParameter( 'comur_image.namer.service' ) );
+                $namerOptions = $this->container->getParameter( 'comur_image.namer.options' );
+
+                if ( $namer instanceof ConfigurableInterface && $namerOptions ) {
+                    $namer->configure( $namerOptions );
+                }
+
+                if ( $namer ) {
+                    $name = $namer->name( $basename );
+                } else {
+                    $name = sha1( uniqid( mt_rand(), true ) );
+                }
+            } else {
+                $name = sha1( uniqid( mt_rand(), true ) );
+            }
+
+            $name .=  '.' . $ext;
         }
+
         while(is_dir($this->get_upload_path($name))) {
             $name = $this->upcount_name($name);
         }
         // Keep an existing filename if this is part of a chunked upload:
-        $uploaded_bytes = $this->fix_integer_overflow(intval($content_range[1]));
+        $uploaded_bytes = $content_range ? $this->fix_integer_overflow(intval($content_range[1])) : null;
         while(is_file($this->get_upload_path($name))) {
             if ($uploaded_bytes === $this->get_file_size(
                     $this->get_upload_path($name))) {
@@ -647,7 +676,7 @@ class UploadHandler
             error_log('Function not found: imagecreatetruecolor');
             return false;
         }
-        list($file_path, $new_file_path) =
+        [$file_path, $new_file_path] =
             $this->get_scaled_image_file_paths($file_name, $version);
         $type = strtolower(substr(strrchr($file_name, '.'), 1));
         switch ($type) {
@@ -813,7 +842,7 @@ class UploadHandler
     }
 
     protected function imagick_create_scaled_image($file_name, $version, $options) {
-        list($file_path, $new_file_path) =
+        [$file_path, $new_file_path] =
             $this->get_scaled_image_file_paths($file_name, $version);
         $image = $this->imagick_get_image_object(
             $file_path,
@@ -893,7 +922,7 @@ class UploadHandler
     }
 
     protected function imagemagick_create_scaled_image($file_name, $version, $options) {
-        list($file_path, $new_file_path) =
+        [$file_path, $new_file_path] =
             $this->get_scaled_image_file_paths($file_name, $version);
         $resize = @$options['max_width']
             .(empty($options['max_height']) ? '' : 'x'.$options['max_height']);
@@ -1095,7 +1124,7 @@ class UploadHandler
     protected function body($str) {
         echo $str;
     }
-    
+
     protected function header($str) {
         header($str);
     }
